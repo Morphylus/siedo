@@ -6,6 +6,10 @@ fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, Wireframe2dPlugin))
         .insert_resource(Grid::default())
+        .insert_resource(LevelSettings {
+            tile_size: 20.0,
+            board_radius: 5,
+        })
         .add_systems(Startup, (setup, setup_grid))
         .run();
 }
@@ -17,11 +21,12 @@ fn setup(mut commands: Commands) {
 fn setup_grid(
     mut commands: Commands,
     mut grid: ResMut<Grid>,
+    level_settings: Res<LevelSettings>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let radius = 3;
-    let tile_size = 50.0;
+    let radius = level_settings.board_radius;
+    let tile_size = level_settings.tile_size;
 
     for q in -radius..=radius {
         let r1 = std::cmp::max(-radius, -q - radius);
@@ -43,6 +48,21 @@ fn setup_grid(
                 ))
                 .id();
             grid.add_tile(coord, tile);
+        }
+    }
+}
+
+#[derive(Resource)]
+struct LevelSettings {
+    tile_size: f32,
+    board_radius: i32,
+}
+
+impl Default for LevelSettings {
+    fn default() -> Self {
+        LevelSettings {
+            tile_size: 50.0,
+            board_radius: 5,
         }
     }
 }
