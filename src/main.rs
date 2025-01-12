@@ -86,6 +86,33 @@ impl Default for Grid {
     }
 }
 
+#[derive(Component)]
+enum Resource {
+    Gold,
+    Wheat,
+    Stone,
+    Wood,
+}
+
+impl Resource {
+    fn new_with_prob() -> Self {}
+
+    fn get_color(self) -> ColorMaterial {
+        match self {
+            Resource::Gold => ColorMaterial::from_color(Color::linear_rgb(255.0, 204.0, 0.0)),
+            Resource::Stone => ColorMaterial::from_color(Color::linear_rgb(102.0, 102.0, 153.0)),
+            Resource::Wheat => ColorMaterial::from_color(Color::linear_rgb(255.0, 255.0, 102.0)),
+            Resource::Wood => ColorMaterial::from_color(Color::linear_rgb(153.0, 102.0, 51.0)),
+        }
+    }
+}
+
+impl Default for Resource {
+    fn default() -> Self {
+        Resource::Wheat
+    }
+}
+
 #[derive(Component, Eq, Hash, PartialEq, Clone, Copy)]
 struct HexCoord {
     q: i32,
@@ -94,6 +121,7 @@ struct HexCoord {
 }
 
 #[derive(Component)]
+#[require(Resource)]
 struct Tile;
 
 struct Coord2D {
