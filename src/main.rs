@@ -7,10 +7,7 @@ fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, Wireframe2dPlugin))
         .insert_resource(Grid::default())
-        .insert_resource(LevelSettings {
-            tile_size: 20.0,
-            board_radius: 10,
-        })
+        .insert_resource(LevelSettings::default())
         .add_systems(Startup, (setup, setup_grid))
         .run();
 }
@@ -35,7 +32,20 @@ fn setup_grid(
         for r in r1..=r2 {
             let coord = HexCoord { q, r, s: -q - r };
             let pixel_coord = coord.center_pixel_coord(tile_size);
-            let resource_type = Resource::new_with_prob();
+            let mut rng = rand::thread_rng();
+            let random_value: f32 = rng.gen();
+
+            let resource_type = match random_value {
+                x if x < level_settings.gold_pr => Resource::Gold,
+                x if x < level_settings.gold_pr + level_settings.wheat_pr => Resource::Wheat,
+                x if x < level_settings.gold_pr
+                    + level_settings.wheat_pr
+                    + level_settings.stone_pr =>
+                {
+                    Resource::Stone
+                }
+                _ => Resource::Wood,
+            };
 
             let tile = commands
                 .spawn((
@@ -57,13 +67,21 @@ fn setup_grid(
 struct LevelSettings {
     tile_size: f32,
     board_radius: i32,
+    gold_pr: f32,
+    wheat_pr: f32,
+    stone_pr: f32,
+    wood_pr: f32,
 }
 
 impl Default for LevelSettings {
     fn default() -> Self {
         LevelSettings {
-            tile_size: 50.0,
-            board_radius: 15,
+            tile_size: 20.0,
+            board_radius: 10,
+            gold_pr: 0.05,
+            wheat_pr: 0.4,
+            stone_pr: 0.2,
+            wood_pr: 0.35,
         }
     }
 }
@@ -96,18 +114,6 @@ enum Resource {
 }
 
 impl Resource {
-    fn new_with_prob() -> Self {
-        let mut rng = rand::thread_rng();
-        let random_value: f64 = rng.gen();
-
-        match random_value {
-            x if x < 0.1 => Resource::Gold,  // 10% probability
-            x if x < 0.5 => Resource::Wheat, // 40% probability
-            x if x < 0.8 => Resource::Stone, // 30% probability
-            _ => Resource::Wood,             // 20% probability
-        }
-    }
-
     fn get_color(self) -> ColorMaterial {
         match self {
             Resource::Gold => ColorMaterial::from_color(Color::linear_rgb(1.0, 0.8, 0.0)),
