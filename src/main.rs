@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::collections::HashMap;
 
 use bevy::{prelude::*, sprite::Wireframe2dPlugin};
@@ -8,7 +9,7 @@ fn main() {
         .insert_resource(Grid::default())
         .insert_resource(LevelSettings {
             tile_size: 20.0,
-            board_radius: 5,
+            board_radius: 10,
         })
         .add_systems(Startup, (setup, setup_grid))
         .run();
@@ -34,17 +35,17 @@ fn setup_grid(
         for r in r1..=r2 {
             let coord = HexCoord { q, r, s: -q - r };
             let pixel_coord = coord.center_pixel_coord(tile_size);
+            let resource_type = Resource::new_with_prob();
 
             let tile = commands
                 .spawn((
                     Tile,
+                    resource_type,
                     coord.clone(),
                     Transform::from_xyz(pixel_coord.x, pixel_coord.y, 0.0),
                     GlobalTransform::default(),
                     Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
-                    MeshMaterial2d(
-                        materials.add(ColorMaterial::from(Color::linear_rgb(1.0, 0.0, 0.0))),
-                    ),
+                    MeshMaterial2d(materials.add(resource_type.get_color())),
                 ))
                 .id();
             grid.add_tile(coord, tile);
@@ -62,7 +63,7 @@ impl Default for LevelSettings {
     fn default() -> Self {
         LevelSettings {
             tile_size: 50.0,
-            board_radius: 5,
+            board_radius: 15,
         }
     }
 }
@@ -86,7 +87,7 @@ impl Default for Grid {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Copy, Clone)]
 enum Resource {
     Gold,
     Wheat,
@@ -95,14 +96,24 @@ enum Resource {
 }
 
 impl Resource {
-    fn new_with_prob() -> Self {}
+    fn new_with_prob() -> Self {
+        let mut rng = rand::thread_rng();
+        let random_value: f64 = rng.gen();
+
+        match random_value {
+            x if x < 0.1 => Resource::Gold,  // 10% probability
+            x if x < 0.5 => Resource::Wheat, // 40% probability
+            x if x < 0.8 => Resource::Stone, // 30% probability
+            _ => Resource::Wood,             // 20% probability
+        }
+    }
 
     fn get_color(self) -> ColorMaterial {
         match self {
-            Resource::Gold => ColorMaterial::from_color(Color::linear_rgb(255.0, 204.0, 0.0)),
-            Resource::Stone => ColorMaterial::from_color(Color::linear_rgb(102.0, 102.0, 153.0)),
-            Resource::Wheat => ColorMaterial::from_color(Color::linear_rgb(255.0, 255.0, 102.0)),
-            Resource::Wood => ColorMaterial::from_color(Color::linear_rgb(153.0, 102.0, 51.0)),
+            Resource::Gold => ColorMaterial::from_color(Color::linear_rgb(1.0, 0.8, 0.0)),
+            Resource::Stone => ColorMaterial::from_color(Color::linear_rgb(0.4, 0.4, 0.6)),
+            Resource::Wheat => ColorMaterial::from_color(Color::linear_rgb(1.0, 1.0, 0.4)),
+            Resource::Wood => ColorMaterial::from_color(Color::linear_rgb(0.6, 0.4, 0.2)),
         }
     }
 }
