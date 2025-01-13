@@ -1,6 +1,8 @@
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng;
 
+use crate::grid_system::HexCoord;
+
 #[derive(Resource)]
 pub struct BoardSettings {
     pub tile_size: f32,
@@ -80,6 +82,7 @@ pub fn setup_board(
                     coord.clone(),
                     Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
                     MeshMaterial2d(materials.add(resource_type.get_color())),
+                    Transform::default(),
                 ))
                 .id();
             grid.add_tile(coord, tile);
@@ -90,27 +93,6 @@ pub fn setup_board(
 #[derive(Component)]
 #[require(Resource)]
 struct Tile;
-
-#[derive(Component, Eq, Hash, PartialEq, Clone, Copy)]
-pub struct HexCoord {
-    pub q: i32,
-    pub r: i32,
-    pub s: i32,
-}
-
-impl HexCoord {
-    pub fn to_screen_coords(self, size: f32) -> Vec3 {
-        let x = size * (3_f32.sqrt() * self.q as f32 + 3_f32.sqrt() / 2.0 * self.r as f32);
-        let y = size * (3.0 / 2.0 * self.r as f32);
-        Vec3::new(x, y, 0.0)
-    }
-}
-
-impl Default for HexCoord {
-    fn default() -> Self {
-        HexCoord { q: 0, r: 0, s: 0 }
-    }
-}
 
 #[derive(Component, Copy, Clone)]
 enum Resource {
