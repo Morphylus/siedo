@@ -58,7 +58,6 @@ pub fn setup_board(
         let r2 = std::cmp::min(radius, -q + radius);
         for r in r1..=r2 {
             let coord = HexCoord { q, r, s: -q - r };
-            let pixel_coord = coord.to_screen_coords(tile_size);
             let mut rng = rand::thread_rng();
             let random_value: f32 = rng.gen();
 
@@ -79,8 +78,7 @@ pub fn setup_board(
                     Tile,
                     resource_type,
                     coord.clone(),
-                    Transform::from_xyz(pixel_coord.x, pixel_coord.y, 0.0),
-                    GlobalTransform::default(),
+                    Transform::default(),
                     Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
                     MeshMaterial2d(materials.add(resource_type.get_color())),
                 ))

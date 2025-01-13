@@ -9,6 +9,7 @@ fn main() {
         .insert_resource(Board::default())
         .insert_resource(BoardSettings::default())
         .add_systems(Startup, (setup, setup_board, spawn_settler))
+        .add_systems(Update, sync_transform_with_hex_coords)
         .run();
 }
 
@@ -16,11 +17,7 @@ fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
 
-fn spawn_settler(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    board_settings: Res<BoardSettings>,
-) {
+fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
     let spawn_coords = HexCoord { q: 1, r: -1, s: 0 };
 
     commands.spawn((
@@ -32,6 +29,15 @@ fn spawn_settler(
         spawn_coords,
         Transform::default(),
     ));
+}
+
+fn sync_transform_with_hex_coords(
+    mut query: Query<(&HexCoord, &mut Transform)>,
+    board_settings: Res<BoardSettings>,
+) {
+    for (hex_coord, mut transform) in &mut query {
+        transform.translation = hex_coord.to_screen_coords(board_settings.tile_size);
+    }
 }
 
 #[derive(Component)]
