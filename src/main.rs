@@ -1,9 +1,9 @@
 use bevy::{prelude::*, sprite::Wireframe2dPlugin};
 
 mod board;
-mod grid_system;
+mod hex_grid;
 use board::{setup_board, Board, BoardSettings};
-use grid_system::{HexCoord, HexGridPlugin};
+use hex_grid::{HexCoord, HexGridPlugin};
 
 fn main() {
     let mut app = App::new();

@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use rand::Rng;
 
-use crate::grid_system::HexCoord;
+use crate::hex_grid::HexCoord;
 
 #[derive(Resource)]
 pub struct BoardSettings {
