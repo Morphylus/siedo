@@ -3,8 +3,8 @@ use rand::Rng;
 
 #[derive(Resource)]
 pub struct BoardSettings {
-    tile_size: f32,
-    board_radius: i32,
+    pub tile_size: f32,
+    pub board_radius: i32,
     gold_pr: f32,
     wheat_pr: f32,
     stone_pr: f32,
@@ -14,8 +14,8 @@ pub struct BoardSettings {
 impl Default for BoardSettings {
     fn default() -> Self {
         BoardSettings {
-            tile_size: 20.0,
-            board_radius: 10,
+            tile_size: 40.0,
+            board_radius: 5,
             gold_pr: 0.05,
             wheat_pr: 0.4,
             stone_pr: 0.2,
@@ -58,7 +58,7 @@ pub fn setup_board(
         let r2 = std::cmp::min(radius, -q + radius);
         for r in r1..=r2 {
             let coord = HexCoord { q, r, s: -q - r };
-            let pixel_coord = coord.center_pixel_coord(tile_size);
+            let pixel_coord = coord.to_screen_coords(tile_size);
             let mut rng = rand::thread_rng();
             let random_value: f32 = rng.gen();
 
@@ -95,22 +95,23 @@ pub fn setup_board(
 struct Tile;
 
 #[derive(Component, Eq, Hash, PartialEq, Clone, Copy)]
-struct HexCoord {
-    q: i32,
-    r: i32,
-    s: i32,
-}
-
-struct Coord2D {
-    x: f32,
-    y: f32,
+pub struct HexCoord {
+    pub q: i32,
+    pub r: i32,
+    pub s: i32,
 }
 
 impl HexCoord {
-    fn center_pixel_coord(self, size: f32) -> Coord2D {
+    pub fn to_screen_coords(self, size: f32) -> Vec3 {
         let x = size * (3_f32.sqrt() * self.q as f32 + 3_f32.sqrt() / 2.0 * self.r as f32);
         let y = size * (3.0 / 2.0 * self.r as f32);
-        return Coord2D { x, y };
+        Vec3::new(x, y, 0.0)
+    }
+}
+
+impl Default for HexCoord {
+    fn default() -> Self {
+        HexCoord { q: 0, r: 0, s: 0 }
     }
 }
 
