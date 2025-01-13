@@ -78,7 +78,6 @@ pub fn setup_board(
                     Tile,
                     resource_type,
                     coord.clone(),
-                    Transform::default(),
                     Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
                     MeshMaterial2d(materials.add(resource_type.get_color())),
                 ))

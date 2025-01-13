@@ -27,7 +27,6 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         MoveRange(1),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
-        Transform::default(),
     ));
 }
 
