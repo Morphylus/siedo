@@ -20,7 +20,7 @@ pub struct HexCoord {
 impl HexCoord {
     pub fn to_screen_coords(self, size: f32) -> Vec3 {
         let x = size * (3_f32.sqrt() * self.q as f32 + 3_f32.sqrt() / 2.0 * self.r as f32);
-        let y = size * (3.0 / 2.0 * self.r as f32);
+        let y = -size * (3.0 / 2.0 * self.r as f32);
         Vec3::new(x, y, 0.0)
     }
 }

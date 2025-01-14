@@ -11,8 +11,11 @@ fn main() {
         .insert_resource(Board::default())
         .insert_resource(BoardSettings::default())
         .insert_resource(HoveredTile::default())
-        .add_systems(Startup, (setup, setup_board, spawn_settler))
-        .add_systems(Update, check_hex_hover_position)
+        .add_systems(
+            Startup,
+            (setup, setup_board, spawn_settler, setup_hover_indicator),
+        )
+        .add_systems(Update, (check_hex_hover_position, update_hover_indicator))
         .run();
 }
 
@@ -71,6 +74,32 @@ fn check_hex_hover_position(
     }
 }
 
+fn update_hover_indicator(
+    hovered_tile: Res<HoveredTile>,
+    mut query: Query<&mut HexCoord, With<HoverIndicator>>,
+) {
+    if let Some(pointer_hex_coord) = hovered_tile.position {
+        let mut entity_hex_coord = query.single_mut();
+
+        *entity_hex_coord = pointer_hex_coord;
+    }
+}
+
+fn setup_hover_indicator(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    board_settings: Res<BoardSettings>,
+) {
+    commands.spawn((
+        HoverIndicator,
+        HexCoord { r: 0, q: 0, s: 0 },
+        Mesh2d(meshes.add(RegularPolygon::new(board_settings.tile_size, 6))),
+        MeshMaterial2d(materials.add(ColorMaterial::from_color(Color::linear_rgb(1.0, 0.0, 0.0)))),
+        Transform::default(),
+    ));
+}
+
 fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
     let spawn_coords = HexCoord { q: -1, r: -1, s: 2 };
 
@@ -85,6 +114,9 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
+#[derive(Component)]
+struct HoverIndicator;
+
 #[derive(Resource)]
 struct HoveredTile {
     position: Option<HexCoord>,
@@ -92,7 +124,9 @@ struct HoveredTile {
 
 impl Default for HoveredTile {
     fn default() -> Self {
-        HoveredTile { position: None }
+        HoveredTile {
+            position: Some(HexCoord { q: 0, r: -1, s: 1 }),
+        }
     }
 }
 
