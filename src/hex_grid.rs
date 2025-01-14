@@ -10,7 +10,7 @@ impl Plugin for HexGridPlugin {
     }
 }
 
-#[derive(Component, Eq, Hash, PartialEq, Clone, Copy)]
+#[derive(Component, Eq, Hash, PartialEq, Clone, Copy, Debug)]
 pub struct HexCoord {
     pub q: i32,
     pub r: i32,

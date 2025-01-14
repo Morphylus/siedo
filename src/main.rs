@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::Wireframe2dPlugin};
+use bevy::{prelude::*, sprite::Wireframe2dPlugin, window::PrimaryWindow};
 
 mod board;
 mod hex_grid;
@@ -10,12 +10,65 @@ fn main() {
     app.add_plugins((DefaultPlugins, Wireframe2dPlugin, HexGridPlugin))
         .insert_resource(Board::default())
         .insert_resource(BoardSettings::default())
+        .insert_resource(HoveredTile::default())
         .add_systems(Startup, (setup, setup_board, spawn_settler))
+        .add_systems(Update, check_hex_hover_position)
         .run();
 }
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
+}
+
+fn check_hex_hover_position(
+    window: Query<&Window>,
+    mut hovered_tile: ResMut<HoveredTile>,
+    board_settings: Res<BoardSettings>,
+) {
+    let window = window.single();
+    let window_width = window.width();
+    let window_height = window.height();
+    let tile_size = board_settings.tile_size;
+    let board_size = board_settings.board_radius;
+
+    if let Some(position) = window.cursor_position() {
+        let centered_x = position.x - 0.5 * window_width;
+        let centered_y = position.y - 0.5 * window_height;
+        let frac_q = (3_f32.sqrt() / 3.0 * centered_x + -1.0 / 3.0 * centered_y) / tile_size;
+        let frac_r = (2.0 / 3.0) * centered_y / tile_size;
+        let frac_s = -frac_q - frac_r;
+
+        // Rounding to nearest cube coordinate
+        let mut q = frac_q.round();
+        let mut r = frac_r.round();
+        let mut s = frac_s.round();
+
+        let q_diff = (q - frac_q).abs();
+        let r_diff = (r - frac_r).abs();
+        let s_diff = (s - frac_s).abs();
+
+        if q_diff > r_diff && q_diff > s_diff {
+            q = -r - s;
+        } else if r_diff > s_diff {
+            r = -q - s;
+        } else {
+            s = -q - r;
+        }
+
+        if q as i32 > board_size || r as i32 > board_size || s as i32 > board_size {
+            hovered_tile.position = None;
+            println!("Outside of grid");
+        } else {
+            let hex_pos = HexCoord {
+                q: (q as i32),
+                r: (r as i32),
+                s: (s as i32),
+            };
+
+            println!("Hex Position: {:?}", hex_pos);
+            hovered_tile.position = Some(hex_pos)
+        }
+    }
 }
 
 fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -30,6 +83,17 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         spawn_coords,
         Transform::default(),
     ));
+}
+
+#[derive(Resource)]
+struct HoveredTile {
+    position: Option<HexCoord>,
+}
+
+impl Default for HoveredTile {
+    fn default() -> Self {
+        HoveredTile { position: None }
+    }
 }
 
 #[derive(Component)]
