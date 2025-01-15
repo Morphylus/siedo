@@ -36,6 +36,8 @@ fn sync_transform_with_hex_coords(
     board_settings: Res<BoardSettings>,
 ) {
     for (hex_coord, mut transform) in &mut query {
-        transform.translation = hex_coord.to_screen_coords(board_settings.tile_size);
+        let screen_coords = hex_coord.to_screen_coords(board_settings.tile_size);
+        transform.translation.x = screen_coords.x;
+        transform.translation.y = screen_coords.y;
     }
 }

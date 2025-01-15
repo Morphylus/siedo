@@ -58,7 +58,8 @@ fn check_hex_hover_position(
             s = -q - r;
         }
 
-        if q as i32 > board_size || r as i32 > board_size || s as i32 > board_size {
+        if q.abs() as i32 > board_size || r.abs() as i32 > board_size || s.abs() as i32 > board_size
+        {
             hovered_tile.position = None;
             println!("Outside of grid");
         } else {
@@ -96,7 +97,7 @@ fn setup_hover_indicator(
         HexCoord { r: 0, q: 0, s: 0 },
         Mesh2d(meshes.add(RegularPolygon::new(board_settings.tile_size, 6))),
         MeshMaterial2d(materials.add(ColorMaterial::from_color(Color::linear_rgb(1.0, 0.0, 0.0)))),
-        Transform::default(),
+        Transform::from_xyz(0.0, 0.0, 2.0),
     ));
 }
 
@@ -110,7 +111,7 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         MoveRange(1),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
-        Transform::default(),
+        Transform::from_xyz(0.0, 0.0, 1.0),
     ));
 }
 

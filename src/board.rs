@@ -82,7 +82,7 @@ pub fn setup_board(
                     coord.clone(),
                     Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
                     MeshMaterial2d(materials.add(resource_type.get_color())),
-                    Transform::default(),
+                    Transform::from_xyz(0.0, 0.0, 0.0),
                 ))
                 .id();
             grid.add_tile(coord, tile);
