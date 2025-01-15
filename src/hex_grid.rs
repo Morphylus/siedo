@@ -51,17 +51,11 @@ fn sync_transform_with_hex_coords(
         transform.translation.y = screen_coords.y;
     }
 }
-fn setup_hover_indicator(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    board_settings: Res<BoardSettings>,
-) {
+fn setup_hover_indicator(mut commands: Commands) {
     commands.spawn((
         HoverIndicator,
         HexCoord { r: 0, q: 0, s: 0 },
         Transform::from_xyz(0.0, 0.0, 1.0),
-        Visibility::Hidden,
     ));
 }
 
