@@ -83,25 +83,17 @@ fn update_hover_indicator(
     let size = board_settings.tile_size;
     let offset = Vec2::new(transform.translation.x, transform.translation.y);
 
-    if let Some(pos) = hovered_tile.position {
-        *entity_hex_coord = pos
-    }
+    if let Some(hovered_hex_pos) = hovered_tile.position {
+        *entity_hex_coord = hovered_hex_pos;
 
-    let outline_vertices: Vec<Vec2> = RegularPolygon::new(size, 6)
-        .vertices(0.0)
-        .into_iter()
-        .chain(std::iter::once(
-            *RegularPolygon::new(size, 6)
-                .vertices(0.0)
-                .into_iter()
-                .collect::<Vec<Vec2>>()
-                .first()
-                .unwrap(),
-        ))
-        .map(|v| v + offset)
-        .collect();
+        let mut outline_vertices: Vec<Vec2> = RegularPolygon::new(size, 6)
+            .vertices(0.0)
+            .into_iter()
+            .collect();
 
-    if hovered_tile.position.is_some() {
+        outline_vertices.push(outline_vertices.clone().into_iter().next().unwrap());
+        outline_vertices = outline_vertices.iter_mut().map(|v| *v + offset).collect();
+
         gizmos.linestrip_2d(outline_vertices, RED);
     }
 }
