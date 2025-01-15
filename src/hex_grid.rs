@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{color::palettes::css::RED, prelude::*, render::mesh::RegularPolygonMeshBuilder};
 
 use crate::board::BoardSettings;
 
@@ -60,8 +60,6 @@ fn setup_hover_indicator(
     commands.spawn((
         HoverIndicator,
         HexCoord { r: 0, q: 0, s: 0 },
-        Mesh2d(meshes.add(RegularPolygon::new(board_settings.tile_size, 6))),
-        MeshMaterial2d(materials.add(ColorMaterial::from_color(Color::linear_rgb(1.0, 0.0, 0.0)))),
         Transform::from_xyz(0.0, 0.0, 1.0),
         Visibility::Hidden,
     ));
@@ -83,18 +81,34 @@ struct HoverIndicator;
 
 fn update_hover_indicator(
     hovered_tile: Res<HoveredTile>,
-    mut query: Query<(&mut HexCoord, &mut Visibility), With<HoverIndicator>>,
+    board_settings: Res<BoardSettings>,
+    mut gizmos: Gizmos,
+    mut query: Query<(&mut HexCoord, &Transform), With<HoverIndicator>>,
 ) {
-    let (mut entity_hex_coord, mut visibility) = query.single_mut();
+    let (mut entity_hex_coord, transform) = query.single_mut();
+    let size = board_settings.tile_size;
+    let offset = Vec2::new(transform.translation.x, transform.translation.y);
 
     if let Some(pos) = hovered_tile.position {
         *entity_hex_coord = pos
     }
 
+    let outline_vertices: Vec<Vec2> = RegularPolygon::new(size, 6)
+        .vertices(0.0)
+        .into_iter()
+        .chain(std::iter::once(
+            *RegularPolygon::new(size, 6)
+                .vertices(0.0)
+                .into_iter()
+                .collect::<Vec<Vec2>>()
+                .first()
+                .unwrap(),
+        ))
+        .map(|v| v + offset)
+        .collect();
+
     if hovered_tile.position.is_some() {
-        *visibility = Visibility::Visible
-    } else {
-        *visibility = Visibility::Hidden
+        gizmos.linestrip_2d(outline_vertices, RED);
     }
 }
 
