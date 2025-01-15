@@ -58,31 +58,39 @@ fn check_hex_hover_position(
             s = -q - r;
         }
 
-        if q.abs() as i32 > board_size || r.abs() as i32 > board_size || s.abs() as i32 > board_size
-        {
-            hovered_tile.position = None;
-            println!("Outside of grid");
-        } else {
-            let hex_pos = HexCoord {
-                q: (q as i32),
-                r: (r as i32),
-                s: (s as i32),
-            };
+        let hex_pos = HexCoord {
+            q: (q as i32),
+            r: (r as i32),
+            s: (s as i32),
+        };
 
-            println!("Hex Position: {:?}", hex_pos);
+        if q.abs() as i32 <= board_size
+            && r.abs() as i32 <= board_size
+            && s.abs() as i32 <= board_size
+        {
             hovered_tile.position = Some(hex_pos)
+        } else {
+            hovered_tile.position = None;
         }
     }
 }
 
 fn update_hover_indicator(
     hovered_tile: Res<HoveredTile>,
-    mut query: Query<&mut HexCoord, With<HoverIndicator>>,
+    mut query: Query<(&mut HexCoord, &mut Visibility), With<HoverIndicator>>,
 ) {
-    if let Some(pointer_hex_coord) = hovered_tile.position {
-        let mut entity_hex_coord = query.single_mut();
+    let (mut entity_hex_coord, mut visibility) = query.single_mut();
 
-        *entity_hex_coord = pointer_hex_coord;
+    *visibility = if hovered_tile.position.is_some() {
+        Visibility::Visible
+    } else {
+        Visibility::Hidden
+    };
+
+    if *visibility == Visibility::Visible {
+        if let Some(pointer_hex_coord) = hovered_tile.position {
+            *entity_hex_coord = pointer_hex_coord;
+        }
     }
 }
 
@@ -97,7 +105,8 @@ fn setup_hover_indicator(
         HexCoord { r: 0, q: 0, s: 0 },
         Mesh2d(meshes.add(RegularPolygon::new(board_settings.tile_size, 6))),
         MeshMaterial2d(materials.add(ColorMaterial::from_color(Color::linear_rgb(1.0, 0.0, 0.0)))),
-        Transform::from_xyz(0.0, 0.0, 2.0),
+        Transform::from_xyz(0.0, 0.0, 1.0),
+        Visibility::Hidden,
     ));
 }
 
@@ -111,7 +120,7 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         MoveRange(1),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
-        Transform::from_xyz(0.0, 0.0, 1.0),
+        Transform::from_xyz(0.0, 0.0, 2.0),
     ));
 }
 
@@ -125,9 +134,7 @@ struct HoveredTile {
 
 impl Default for HoveredTile {
     fn default() -> Self {
-        HoveredTile {
-            position: Some(HexCoord { q: 0, r: -1, s: 1 }),
-        }
+        HoveredTile { position: None }
     }
 }
 
