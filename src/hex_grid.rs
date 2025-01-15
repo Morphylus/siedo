@@ -1,4 +1,4 @@
-use bevy::{color::palettes::css::RED, prelude::*, render::mesh::RegularPolygonMeshBuilder};
+use bevy::{color::palettes::css::RED, prelude::*};
 
 use crate::board::BoardSettings;
 
@@ -60,8 +60,8 @@ fn setup_hover_indicator(mut commands: Commands) {
 }
 
 #[derive(Resource)]
-struct HoveredTile {
-    position: Option<HexCoord>,
+pub struct HoveredTile {
+    pub position: Option<HexCoord>,
 }
 
 impl Default for HoveredTile {
