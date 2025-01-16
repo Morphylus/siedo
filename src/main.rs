@@ -11,12 +11,52 @@ fn main() {
         .insert_resource(Board::default())
         .insert_resource(BoardSettings::default())
         .add_systems(Startup, (setup, setup_board, spawn_settler))
-        .add_systems(Update, piece_selection_system)
+        .add_systems(Update, (piece_selection_system, move_range_overlay))
         .run();
 }
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
+}
+
+fn move_range_overlay(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    board_settings: Res<BoardSettings>,
+    selected_piece: Query<(Entity, &HexCoord, &MoveRange), With<Selected>>,
+    move_range_indicators: Query<Entity, With<MoveRangeIndicator>>,
+) {
+    if selected_piece.is_empty() {
+        for entity in move_range_indicators.iter() {
+            commands.entity(entity).despawn();
+        }
+    } else {
+        let (entity, hex_coord, move_range) = selected_piece.single();
+        let range = move_range.0 as i32;
+        let tile_size = board_settings.tile_size;
+
+        let mut in_range_hexes: Vec<HexCoord> = Vec::new();
+
+        for q in -range..=range {
+            for r in std::cmp::max(-range, -q - range)..=std::cmp::min(range, -q + range) {
+                let s = -q - r;
+                in_range_hexes.push(HexCoord { q, r, s } + *hex_coord);
+            }
+        }
+
+        for indicator_coord in in_range_hexes {
+            commands.spawn((
+                MoveRangeIndicator,
+                indicator_coord,
+                Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
+                MeshMaterial2d(
+                    materials.add(ColorMaterial::from_color(Color::linear_rgb(0.0, 0.0, 1.0))),
+                ),
+                Transform::from_xyz(0.0, 0.0, 2.0),
+            ));
+        }
+    }
 }
 
 fn piece_selection_system(
@@ -52,7 +92,7 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         MoveRange(1),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
-        Transform::from_xyz(0.0, 0.0, 2.0),
+        Transform::from_xyz(0.0, 0.0, 3.0),
     ));
 }
 

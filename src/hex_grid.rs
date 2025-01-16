@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use bevy::{color::palettes::css::RED, prelude::*};
 
 use crate::board::BoardSettings;
@@ -38,6 +40,17 @@ impl HexCoord {
 impl Default for HexCoord {
     fn default() -> Self {
         HexCoord { q: 0, r: 0, s: 0 }
+    }
+}
+
+impl Add for HexCoord {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        HexCoord {
+            q: self.q + rhs.q,
+            r: self.r + rhs.r,
+            s: self.s + rhs.s,
+        }
     }
 }
 
