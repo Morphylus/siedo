@@ -23,14 +23,19 @@ fn piece_selection_system(
     buttons: Res<ButtonInput<MouseButton>>,
     hovered_tile: Res<HoveredTile>,
     game_piece: Query<(Entity, &HexCoord), With<GamePiece>>,
+    selected_game_pieces: Query<Entity, With<Selected>>,
     mut commands: Commands,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
         if let Some(hex_hover_position) = hovered_tile.position {
+            for entity in selected_game_pieces.iter() {
+                commands.entity(entity).remove::<Selected>();
+                info!("Removed selected from all entities!");
+            }
             for (entity, hex_coord) in game_piece.iter() {
                 if *hex_coord == hex_hover_position {
                     commands.entity(entity).insert(Selected);
-                    println!("Selected entity at {:?}", hex_hover_position);
+                    info!("Selected game piece at: {:?}", hex_hover_position);
                 }
             }
         }
