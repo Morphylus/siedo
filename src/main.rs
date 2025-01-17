@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use bevy::{ecs::system::SystemId, prelude::*, sprite::Wireframe2dPlugin};
+use bevy::{
+    ecs::{observer::TriggerTargets, system::SystemId},
+    prelude::*,
+    sprite::Wireframe2dPlugin,
+};
 
 mod board;
 mod hex_grid;
@@ -80,24 +84,27 @@ fn move_range_overlay(
     }
 }
 
+fn piece_movement_system() {}
+
 fn piece_selection_system(
     buttons: Res<ButtonInput<MouseButton>>,
     hovered_tile: Res<HoveredTile>,
-    game_piece: Query<(Entity, &HexCoord), With<GamePiece>>,
-    selected_game_pieces: Query<Entity, With<Selected>>,
+    selected_pieces: Query<Entity, (With<GamePiece>, With<Selected>)>,
+    not_selected_pieces: Query<(Entity, &HexCoord), (With<GamePiece>, Without<Selected>)>,
     systems: Res<GameSystems>,
     mut commands: Commands,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
         if let Some(hex_hover_position) = hovered_tile.position {
-            for entity in selected_game_pieces.iter() {
-                commands.entity(entity).remove::<Selected>();
-                info!("Removed selected from all entities!");
+            // Unselect all game pieces
+            for piece in selected_pieces.iter() {
+                commands.entity(piece).remove::<Selected>();
             }
-            for (entity, hex_coord) in game_piece.iter() {
-                if *hex_coord == hex_hover_position {
-                    commands.entity(entity).insert(Selected);
-                    info!("Selected game piece at: {:?}", hex_hover_position);
+
+            // Select relevant piece
+            for (piece, piece_coord) in not_selected_pieces.iter() {
+                if *piece_coord == hex_hover_position {
+                    commands.entity(piece).insert(Selected);
                 }
             }
         }
