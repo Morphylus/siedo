@@ -71,9 +71,9 @@ fn move_range_overlay(
                 MoveRangeIndicator,
                 indicator_coord,
                 Mesh2d(meshes.add(RegularPolygon::new(tile_size, 6))),
-                MeshMaterial2d(
-                    materials.add(ColorMaterial::from_color(Color::linear_rgb(0.0, 0.0, 1.0))),
-                ),
+                MeshMaterial2d(materials.add(ColorMaterial::from_color(Color::linear_rgba(
+                    0.0, 0.0, 1.0, 0.8,
+                )))),
                 Transform::from_xyz(0.0, 0.0, 2.0),
             ));
         }
