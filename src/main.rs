@@ -18,7 +18,7 @@ fn main() {
         .insert_resource(Board::default())
         .insert_resource(BoardSettings::default())
         .add_systems(Startup, (setup, setup_board, spawn_settler))
-        .add_systems(Update, piece_selection_system)
+        .add_systems(Update, (piece_selection_system, piece_movement_system))
         .run();
 }
 
@@ -59,8 +59,6 @@ fn move_range_overlay(
         let range = move_range.0 as i32;
         let tile_size = board_settings.tile_size;
 
-        info!("Drawing overlay");
-
         let mut in_range_hexes: Vec<HexCoord> = Vec::new();
 
         for q in -range..=range {
@@ -84,7 +82,24 @@ fn move_range_overlay(
     }
 }
 
-fn piece_movement_system() {}
+fn piece_movement_system(
+    buttons: Res<ButtonInput<MouseButton>>,
+    hovered_tile: Res<HoveredTile>,
+    possible_moves: Query<&HexCoord, (With<MoveRangeIndicator>, Without<GamePiece>)>,
+    mut game_piece_query: Query<(Entity, &mut HexCoord), (With<Selected>, With<GamePiece>)>,
+    mut commands: Commands,
+) {
+    if buttons.just_pressed(MouseButton::Left) {
+        if let Some(click_position) = hovered_tile.position {
+            for possible_loc in possible_moves.iter() {
+                if *possible_loc == click_position {
+                    let (piece, mut coords) = game_piece_query.single_mut();
+                    *coords = click_position;
+                }
+            }
+        }
+    }
+}
 
 fn piece_selection_system(
     buttons: Res<ButtonInput<MouseButton>>,
@@ -119,7 +134,7 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         GamePiece,
         PieceType::Settler,
         MovablePiece,
-        MoveRange(2),
+        MoveRange(3),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
         Transform::from_xyz(0.0, 0.0, 3.0),
