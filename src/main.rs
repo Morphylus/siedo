@@ -1,4 +1,6 @@
-use bevy::{prelude::*, sprite::Wireframe2dPlugin, window::PrimaryWindow};
+use std::collections::HashMap;
+
+use bevy::{ecs::system::SystemId, prelude::*, sprite::Wireframe2dPlugin};
 
 mod board;
 mod hex_grid;
@@ -8,15 +10,32 @@ use hex_grid::{HexCoord, HexGridPlugin, HoveredTile};
 fn main() {
     let mut app = App::new();
     app.add_plugins((DefaultPlugins, Wireframe2dPlugin, HexGridPlugin))
+        .init_resource::<GameSystems>()
         .insert_resource(Board::default())
         .insert_resource(BoardSettings::default())
         .add_systems(Startup, (setup, setup_board, spawn_settler))
-        .add_systems(Update, (piece_selection_system, move_range_overlay))
+        .add_systems(Update, piece_selection_system)
         .run();
 }
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
+}
+
+#[derive(Resource)]
+struct GameSystems(HashMap<String, SystemId>);
+
+impl FromWorld for GameSystems {
+    fn from_world(world: &mut World) -> Self {
+        let mut game_systems = GameSystems(HashMap::new());
+
+        game_systems.0.insert(
+            "MoveRangeOverlay".into(),
+            world.register_system(move_range_overlay),
+        );
+
+        game_systems
+    }
 }
 
 fn move_range_overlay(
@@ -35,6 +54,8 @@ fn move_range_overlay(
         let (entity, hex_coord, move_range) = selected_piece.single();
         let range = move_range.0 as i32;
         let tile_size = board_settings.tile_size;
+
+        info!("Drawing overlay");
 
         let mut in_range_hexes: Vec<HexCoord> = Vec::new();
 
@@ -64,6 +85,7 @@ fn piece_selection_system(
     hovered_tile: Res<HoveredTile>,
     game_piece: Query<(Entity, &HexCoord), With<GamePiece>>,
     selected_game_pieces: Query<Entity, With<Selected>>,
+    systems: Res<GameSystems>,
     mut commands: Commands,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
@@ -79,6 +101,7 @@ fn piece_selection_system(
                 }
             }
         }
+        commands.run_system(systems.0["MoveRangeOverlay"]);
     }
 }
 
@@ -89,7 +112,7 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         GamePiece,
         PieceType::Settler,
         MovablePiece,
-        MoveRange(1),
+        MoveRange(2),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
         Transform::from_xyz(0.0, 0.0, 3.0),
