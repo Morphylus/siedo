@@ -126,8 +126,8 @@ fn piece_selection_system(
                     commands.entity(piece).insert(Selected);
                 }
             }
+            commands.run_system(systems.0["MoveRangeOverlay"]);
         }
-        commands.run_system(systems.0["MoveRangeOverlay"]);
     }
 }
 
