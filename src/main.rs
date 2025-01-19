@@ -49,6 +49,7 @@ fn move_range_overlay(
     mut materials: ResMut<Assets<ColorMaterial>>,
     board_settings: Res<BoardSettings>,
     selected_piece: Query<(Entity, &HexCoord, &MoveRange), With<Selected>>,
+    non_selected_pieces: Query<&HexCoord, (With<GamePiece>, Without<Selected>)>,
     move_range_indicators: Query<Entity, With<MoveRangeIndicator>>,
 ) {
     if selected_piece.is_empty() {
@@ -71,6 +72,9 @@ fn move_range_overlay(
                 if overlay_location.q.abs() <= board_size
                     && overlay_location.r.abs() <= board_size
                     && overlay_location.s.abs() <= board_size
+                    && !non_selected_pieces
+                        .iter()
+                        .any(|piece_coord| *piece_coord == overlay_location)
                 {
                     in_range_hexes.push(overlay_location);
                 }
