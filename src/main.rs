@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-use bevy::{
-    ecs::{observer::TriggerTargets, system::SystemId},
-    prelude::*,
-    sprite::Wireframe2dPlugin,
-};
+use bevy::{ecs::system::SystemId, prelude::*, sprite::Wireframe2dPlugin};
 
 mod board;
 mod hex_grid;
@@ -57,6 +53,7 @@ fn move_range_overlay(
     } else {
         let (entity, hex_coord, move_range) = selected_piece.single();
         let range = move_range.0 as i32;
+        let board_size = board_settings.board_radius;
         let tile_size = board_settings.tile_size;
 
         let mut in_range_hexes: Vec<HexCoord> = Vec::new();
@@ -64,7 +61,14 @@ fn move_range_overlay(
         for q in -range..=range {
             for r in std::cmp::max(-range, -q - range)..=std::cmp::min(range, -q + range) {
                 let s = -q - r;
-                in_range_hexes.push(HexCoord { q, r, s } + *hex_coord);
+                let overlay_location = HexCoord { q, r, s } + *hex_coord;
+
+                if overlay_location.q.abs() <= board_size
+                    && overlay_location.r.abs() <= board_size
+                    && overlay_location.s.abs() <= board_size
+                {
+                    in_range_hexes.push(overlay_location);
+                }
             }
         }
 
