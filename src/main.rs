@@ -34,6 +34,11 @@ impl FromWorld for GameSystems {
             world.register_system(move_range_overlay),
         );
 
+        game_systems.0.insert(
+            "ClearMoveRangeIndicator".into(),
+            world.register_system(clear_range_overlay),
+        );
+
         game_systems
     }
 }
@@ -86,6 +91,15 @@ fn move_range_overlay(
     }
 }
 
+fn clear_range_overlay(
+    move_range_indicators: Query<Entity, With<MoveRangeIndicator>>,
+    mut commands: Commands,
+) {
+    for overlay in move_range_indicators.iter() {
+        commands.entity(overlay).despawn();
+    }
+}
+
 fn piece_movement_system(
     buttons: Res<ButtonInput<MouseButton>>,
     hovered_tile: Res<HoveredTile>,
@@ -120,6 +134,8 @@ fn piece_selection_system(
                 commands.entity(piece).remove::<Selected>();
             }
 
+            commands.run_system(systems.0["ClearMoveRangeIndicator"]);
+
             // Select relevant piece
             for (piece, piece_coord) in not_selected_pieces.iter() {
                 if *piece_coord == hex_hover_position {
@@ -141,6 +157,16 @@ fn spawn_settler(mut commands: Commands, asset_server: Res<AssetServer>) {
         MoveRange(3),
         Sprite::from_image(asset_server.load("pieces/pawn.png")),
         spawn_coords,
+        Transform::from_xyz(0.0, 0.0, 3.0),
+    ));
+
+    commands.spawn((
+        GamePiece,
+        PieceType::Settler,
+        MovablePiece,
+        MoveRange(2),
+        Sprite::from_image(asset_server.load("pieces/sword.png")),
+        HexCoord { q: 0, r: 0, s: 0 },
         Transform::from_xyz(0.0, 0.0, 3.0),
     ));
 }
